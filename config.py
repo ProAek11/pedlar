@@ -17,3 +17,4 @@ GOOGLE_ANALYTICS = "" # GA Code UA-###
 LEADERBOARD_SIZE = 10 # Displays top N users
 RECENT_ORDERS_SIZE = 30 # Displays N most recent orders
 TICK_HIST_SIZE = 120 # Number ticks in tick chart
+WEB_LEVERAGE = 100 # Leverage to calculate profits on web

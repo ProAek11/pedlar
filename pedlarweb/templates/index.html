@@ -32,8 +32,8 @@
               <td>{{ Math.round((tick.ask - tick.bid)*100000)/10 }}</td>
             </tr>
             <tr>
-              <td><button v-on:click="newOrder(2)" class="w3-button w3-block w3-round w3-blue">Buy</button></td>
-              <td><button v-on:click="newOrder(3)" class="w3-button w3-block w3-round w3-red">Sell</button></td>
+              <td><button v-on:click="newOrder(3)" class="w3-button w3-block w3-round w3-blue">Sell</button></td>
+              <td><button v-on:click="newOrder(2)" class="w3-button w3-block w3-round w3-red">Buy</button></td>
               <td><label>Lots:</label><input v-model.number="order_volume" type="number" value="0.01" step="0.01" min="0.01" max="1.0"></td>
             </tr>
           </table>
@@ -64,8 +64,9 @@
               <td>{{ o.agent }}</td>
               <td>{{ o.type }}</td>
               <td>{{ o.price_open }}</td>
-              <td>{{ o.price_close }}</td>
-              <td>{{ o.profit }}</td>
+              <td v-if="o.price_close">{{ o.price_close }}</td>
+              <td v-else><button v-on:click="closeOrder(o)" class="w3-button w3-theme w3-round w3-block">Close</button></td>
+              <td>{{ calcProfit(o) }}</td>
               <td class="w3-hide-medium w3-hide-small">{{ o.created.toLocaleString() }}</td>
               <td class="w3-hide-medium w3-hide-small">{{ o.closed.toLocaleString() }}</td>
             </tr>
@@ -105,7 +106,7 @@
 // Setup socket connection
 var socket = io.connect('http://' + document.domain + ':' + location.port);
 socket.on('connect', function() {
-  console.log("Socket connected.")
+  console.log("Socket connected.");
 });
 // Setup Vue dynamic components
 var app = new Vue({
@@ -155,6 +156,40 @@ var app = new Vue({
         });
         console.log(error);
       });
+    },
+    closeOrder: function(order) {
+      thisapp = this;
+      axios.post("/trade", {
+        order_id: order.id, // null id for new orders
+        volume: order.volume,
+        action: 1, // 2 -> BUY, 3 -> SELL
+        name: this.current_username
+      }).then(function(response) {
+        thisapp.addMessage({
+          username: "pedlarweb",
+          msg: "Order closed successfully."
+        });
+      }).catch(function(error) {
+        thisapp.addMessage({
+          username: "pedlarweb",
+          msg: "Failed to close order."
+        });
+        console.log(error);
+      });
+    },
+    calcProfit: function(order) {
+      if (order.price_close) {
+        return order.profit; // Already calculated
+      }
+      // BIG ASSUMPTION, account currency is the same as base currency
+      // Ex. GBP account trading on GBPUSD since we don't have other
+      // exchange rates streaming to us to handle conversion
+      let closep = order.type == "BUY" ? this.tick.bid : this.tick.ask;
+      let diff = order.type == "BUY" ? closep - order.price_open : order.price_open - closep;
+      let leverage = {{ config['WEB_LEVERAGE'] }};
+      let profit = diff*leverage*order.volume*1000*(1/closep);
+      profit = Math.round(profit*100)/100; // round to 2 decimal places
+      return profit;
     }
   }
 });
