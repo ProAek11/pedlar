@@ -83,7 +83,7 @@
         <div id="chatbox" class="w3-panel w3-border" style="min-height:60vh;max-height:60vh;overflow-y:scroll">
           <p v-for="m in messages" style="margin:0px;white-space:pre-wrap;"><b v-bind:class="{ 'w3-text-theme': current_username == m.username }">{{ m.username }}:</b> {{ m.msg }}</p>
         </div>
-        <textarea id="chatinput" v-on:keypress.enter.exact.prevent="sendchat" class="w3-input w3-margin-bottom" style="max-width:100%" placeholder="message"></textarea>
+        <textarea id="chatinput" v-on:keypress.enter.exact.prevent="sendChat" class="w3-input w3-margin-bottom" style="max-width:100%" placeholder="message"></textarea>
       </div>
     </div>
     <br>
@@ -120,7 +120,7 @@ var app = new Vue({
   },
   // Event handlers
   methods: {
-    sendchat: function(event) {
+    sendChat: function(event) {
       if (/\S/.test(event.target.value)) {
         payload = {username: '{{ current_user.username }}',
                    msg: event.target.value};
@@ -128,7 +128,7 @@ var app = new Vue({
         event.target.value = "";
       }
     },
-    addmessage: function(msg) {
+    addMessage: function(msg) {
       this.messages.push(msg);
       this.$nextTick(function() {
         var container = this.$el.querySelector("#chatbox");
@@ -197,7 +197,7 @@ var tick_chart = new Chart(ctx, {
 });
 
 // Handle incoming socket messages
-socket.on('chat', app.addmessage);
+socket.on('chat', app.addMessage);
 socket.on('leaderboard', function(leaders) {
   app.leaders = leaders;
 });
