@@ -54,9 +54,11 @@ def rows_to_dicts(objs, attributes):
 
 def get_orders():
   """Return current user orders."""
-  rows = Order.query.filter_by(user_id=current_user.id).\
+  open_orders = Order.query.filter_by(user_id=current_user.id, price_close=None).all()
+  closed_orders = Order.query.filter(Order.user_id==current_user.id, Order.price_close!=None).\
                      order_by(Order.created.desc()).\
                      limit(app.config['RECENT_ORDERS_SIZE']).all()
+  rows = open_orders + closed_orders
   orders = rows_to_dicts(rows, ['id', 'agent', 'type', 'price_open',
                                 'volume', 'price_close', 'profit',
                                 'closed', 'created'])
