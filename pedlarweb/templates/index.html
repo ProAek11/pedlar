@@ -31,6 +31,11 @@
               <td>{{ tick.ask }}</td>
               <td>{{ Math.round((tick.ask - tick.bid)*100000)/10 }}</td>
             </tr>
+            <tr>
+              <td><button v-on:click="newOrder(2)" class="w3-button w3-block w3-round w3-blue">Buy</button></td>
+              <td><button v-on:click="newOrder(3)" class="w3-button w3-block w3-round w3-red">Sell</button></td>
+              <td><label>Lots:</label><input v-model.number="order_volume" type="number" value="0.01" step="0.01" min="0.01" max="1.0"></td>
+            </tr>
           </table>
         </div>
         <br>
@@ -90,6 +95,7 @@
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 {% if config['DEBUG'] %}
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 {% else %}
@@ -109,7 +115,8 @@ var app = new Vue({
     leaders: [], // leaderboard leaders
     orders: [], // Vue is unhappy with dict changes so use array
     messages: [], // chat messages
-    tick: {'bid': 0.0, 'ask': 0.0} // latest tick data
+    tick: {'bid': 0.0, 'ask': 0.0}, // latest tick data
+    order_volume: 0.01 // new order volume
   },
   // Event handlers
   methods: {
@@ -128,6 +135,26 @@ var app = new Vue({
         container.scroll({top: container.scrollHeight, behavior: 'smooth'});
       });
       //container.scrollTop = container.scrollHeight;
+    },
+    newOrder: function(type) {
+      thisapp = this;
+      axios.post("/trade", {
+        order_id: 0, // null id for new orders
+        volume: this.order_volume,
+        action: type, // 2 -> BUY, 3 -> SELL
+        name: this.current_username
+      }).then(function(response) {
+        thisapp.addMessage({
+          username: "pedlarweb",
+          msg: "New order successful."
+        });
+      }).catch(function(error) {
+        thisapp.addMessage({
+          username: "pedlarweb",
+          msg: "Failed to place new order."
+        });
+        console.log(error);
+      });
     }
   }
 });
