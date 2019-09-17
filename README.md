@@ -127,10 +127,20 @@ python3 -c "from pedlarweb import db; db.create_all()"
 If the in-memory default database is used, tables will be automatically created but *data is lost when server is stopped using an in-memory database.* Then the server can be run using standard Flask options:
 
 ```bash
-export FLASK_APP=pedlarweb flask run
+python3 runpedlarweb.py -h
+
+usage: runpedlarweb.py [-h] [-d] [--host HOST] [--port PORT]
+
+Run pedlarweb.
+
+optional arguments:
+  -h, --help   show this help message and exit
+  -d, --debug  Enable debug server.
+  --host HOST  Host IP address.
+  --port PORT  Host port.
 ```
 
-Due to [Flask-SocketIO](https://flask-socketio.readthedocs.io/en/latest/) the `eventlet` server would be run. For development the `FLASK_ENV=development` environment variable needs to be set. **For convinience, a new user is created if none with the username exist from the login page.** This choice is done to get people on-board as easy as possible without heavy registration and email confirmation schemes.
+Due to [Flask-SocketIO](https://flask-socketio.readthedocs.io/en/latest/) the `eventlet` server would be run. **For convinience, a new user is created if none with the username exist from the login page.** This choice is done to get people on-board as easy as possible without heavy registration and email confirmation schemes.
 
 ## FAQ
 
