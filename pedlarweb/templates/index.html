@@ -137,45 +137,36 @@ var app = new Vue({
       });
       //container.scrollTop = container.scrollHeight;
     },
-    newOrder: function(type) {
-      thisapp = this;
-      axios.post("/trade", {
-        order_id: 0, // null id for new orders
-        volume: this.order_volume,
-        action: type, // 2 -> BUY, 3 -> SELL
-        name: this.current_username
-      }).then(function(response) {
+    openCloseOrder: function(payload, succ_msg, fail_msg) {
+      let thisapp = this;
+      axios.post("/trade", payload).then(function(response) {
         thisapp.addMessage({
-          username: "pedlarweb",
-          msg: "New order successful."
+          username: "pedlar",
+          msg: succ_msg
         });
       }).catch(function(error) {
         thisapp.addMessage({
-          username: "pedlarweb",
-          msg: "Failed to place new order."
+          username: "pedlar",
+          msg: fail_msg
         });
         console.log(error);
       });
     },
-    closeOrder: function(order) {
-      thisapp = this;
-      axios.post("/trade", {
-        order_id: order.id, // null id for new orders
-        volume: order.volume,
-        action: 1, // 2 -> BUY, 3 -> SELL
+    newOrder: function(type) {
+      this.openCloseOrder({
+        order_id: 0, // null id for new orders
+        volume: this.order_volume,
+        action: type, // 2 -> BUY, 3 -> SELL
         name: this.current_username
-      }).then(function(response) {
-        thisapp.addMessage({
-          username: "pedlarweb",
-          msg: "Order closed successfully."
-        });
-      }).catch(function(error) {
-        thisapp.addMessage({
-          username: "pedlarweb",
-          msg: "Failed to close order."
-        });
-        console.log(error);
-      });
+      }, "New order successful.", "Failed to place new order.");
+    },
+    closeOrder: function(order) {
+      this.openCloseOrder({
+        order_id: order.id,
+        volume: order.volume,
+        action: 1, // 1 -> CLOSE
+        name: this.current_username
+      }, "Order closed successfully.", "Failed to close order.");
     },
     calcProfit: function(order) {
       if (order.price_close) {
