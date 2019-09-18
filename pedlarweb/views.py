@@ -99,33 +99,40 @@ def trade():
   # Pass the trade request to broker
   req = request.json
   agent_name = req.pop('name', 'nobody')
-  resp = broker.handle(req)
-  if resp['retcode'] == 0 and req['action'] in (2, 3):
-    # Record the new order
-    order = Order(id=resp['order_id'], user_id=current_user.id,
-                  type="BUY" if req['action'] == 2 else "SELL",
-                  agent=agent_name, price_open=round(resp['price'], 5),
-                  volume=req['volume'])
-    db.session.add(order)
-    db.session.commit()
-    # Send order update
-    socketio.emit('order', rows_to_dicts([order], ['id', 'agent', 'type', 'price_open', 'volume',
-                                                   'price_close', 'profit', 'closed', 'created'])[0],
-                  room=current_user.username)
-  elif resp['retcode'] == 0 and req['action'] == 1:
+  if req['action'] in (2, 3):
+    resp = broker.handle(req)
+    if resp['retcode'] == 0:
+      # Record the new order
+      order = Order(id=resp['order_id'], user_id=current_user.id,
+                    type="BUY" if req['action'] == 2 else "SELL",
+                    agent=agent_name, price_open=round(resp['price'], 5),
+                    volume=req['volume'])
+      db.session.add(order)
+      db.session.commit()
+      # Send order update
+      socketio.emit('order', rows_to_dicts([order], ['id', 'agent', 'type', 'price_open', 'volume',
+                                                     'price_close', 'profit', 'closed', 'created'])[0],
+                    room=current_user.username)
+  elif req['action'] == 1:
     # Close the recorded order
     order = Order.query.get_or_404(req['order_id'])
-    order.price_close = round(resp['price'], 5)
-    order.profit = round(resp['profit'], 5)
-    order.closed = datetime.datetime.now()
-    current_user.balance = round(resp['profit'] + current_user.balance, 5)
-    db.session.commit()
-    # Send leaderboard update
-    socketio.emit('leaderboard', get_leaders())
-    # Send order update
-    socketio.emit('order', rows_to_dicts([order], ['id', 'agent', 'type', 'price_open', 'volume',
-                                                   'price_close', 'profit', 'closed', 'created'])[0],
-                  room=current_user.username)
+    if order.price_close: # The order has been closed already
+      return jsonify({'order_id': order.id, 'price': order.price_close,
+                      'profit': order.profit, 'retcode': 0})
+    # Otherwise delegate to the broker
+    resp = broker.handle(req)
+    if resp['retcode'] == 0:
+      order.price_close = round(resp['price'], 5)
+      order.profit = round(resp['profit'], 5)
+      order.closed = datetime.datetime.now()
+      current_user.balance = round(resp['profit'] + current_user.balance, 5)
+      db.session.commit()
+      # Send leaderboard update
+      socketio.emit('leaderboard', get_leaders())
+      # Send order update
+      socketio.emit('order', rows_to_dicts([order], ['id', 'agent', 'type', 'price_open', 'volume',
+                                                     'price_close', 'profit', 'closed', 'created'])[0],
+                    room=current_user.username)
   return jsonify(resp)
 
 def reset_account():
