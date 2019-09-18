@@ -1,6 +1,6 @@
 """pedlarweb configuration parameters."""
 DEBUG = True # Turns on debugging for Flask
-VERSION = "0.0.7" # Version of pedlar
+VERSION = "0.0.8" # Version of pedlar
 SECRET_KEY = "secretmaster3000" # Secret key for sessions
 
 BCRYPT_LOG_ROUNDS = 12 # Number of encryption rounds
