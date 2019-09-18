@@ -47,7 +47,7 @@ class Agent:
     self.balance = 0.0 # Local session balance
 
   @classmethod
-  def from_args(cls, parents=None):
+  def from_args(cls, parents: list = None):
     """Create agent instance from command line arguments."""
     parser = argparse.ArgumentParser(description="Pedlar trading agent.",
                                      fromfile_prefix_chars='@',
@@ -107,11 +107,11 @@ class Agent:
     if not r.is_redirect:
       logger.warning("Could not logout from Pedlar web.")
 
-  def on_order(self, order):
+  def on_order(self, order: Order):
     """Called on successful order."""
     pass
 
-  def talk(self, order_id=0, volume=0.01, action=0):
+  def talk(self, order_id: int = 0, volume: float = 0.01, action: int = 0):
     """Make a request response attempt to Pedlar web."""
     payload = {'order_id': order_id, 'volume': volume, 'action': action,
                'name': self.name}
@@ -124,7 +124,7 @@ class Agent:
       raise IOError("Pedlar web server communication error.")
     return resp
 
-  def _place_order(self, otype="buy", volume=0.01, single=True, reverse=True):
+  def _place_order(self, otype: str = "buy", volume: float = 0.01, single: bool = True, reverse: bool = True):
     """Place a buy or a sell order."""
     ootype = "sell" if otype == "buy" else "buy" # Opposite order type
     if (reverse and
@@ -155,7 +155,7 @@ class Agent:
     except Exception as e:
       logger.error("Failed to place %s order: %s", otype, str(e))
 
-  def buy(self, volume=0.01, single=True, reverse=True):
+  def buy(self, volume: float = 0.01, single: bool = True, reverse: bool = True):
     """Place a new buy order and store it in self.orders
     :param volume: size of trade
     :param single: only place if there is not an already
@@ -163,7 +163,7 @@ class Agent:
     """
     self._place_order(otype="buy", volume=volume, single=single, reverse=reverse)
 
-  def sell(self, volume=0.01, single=True, reverse=True):
+  def sell(self, volume: float = 0.01, single: bool = True, reverse: bool = True):
     """Place a new sell order and store it in self.orders
     :param volume: size of trade
     :param single: only place if there is not an already
@@ -171,11 +171,11 @@ class Agent:
     """
     self._place_order(otype="sell", volume=volume, single=single, reverse=reverse)
 
-  def on_order_close(self, order, profit):
+  def on_order_close(self, order: Order, profit: float):
     """Called on successfull order close."""
     pass
 
-  def close(self, order_ids=None):
+  def close(self, order_ids: list = None):
     """Close open all orders or given ids
     :param order_ids: only close these orders
     :return: true on success false otherwise
@@ -202,7 +202,7 @@ class Agent:
           return False
     return True
 
-  def on_tick(self, bid, ask, time=None):
+  def on_tick(self, bid: float , ask: float, time: datetime = None):
     """Called on every tick update.
     :param bid: latest bid price
     :param ask: latest asking price
@@ -210,7 +210,7 @@ class Agent:
     """
     pass
 
-  def on_bar(self, bopen, bhigh, blow, bclose, time=None):
+  def on_bar(self, bopen: float, bhigh: float, blow: float, bclose: float, time: datetime = None):
     """Called on every last bar update.
     :param bopen: opening price
     :param bhigh: highest price
