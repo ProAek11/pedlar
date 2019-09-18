@@ -9,6 +9,8 @@ import struct
 import requests
 import zmq
 
+from .utils import calc_profit
+
 logger = logging.getLogger(__name__)
 logger.info("libzmq: %s", zmq.zmq_version())
 logger.info("pyzmq: %s", zmq.pyzmq_version())
@@ -183,10 +185,7 @@ class Agent:
       if self.backtest:
         # Execute order locally
         order = self.orders.pop(oid)
-        closep = self._last_tick[0 if order.type == "buy" else 1]
-        diff = closep - order.price if order.type == "buy" else order.price - closep
-        # Assume 100 for leverage for now
-        profit = round(diff*100*order.volume*1000*(1/closep), 2)
+        _, profit = calc_profit(order, *self._last_tick)
         logger.info("Closed order %s with profit %s", oid, profit)
         self.balance += profit
         self.on_order_close(order, profit)

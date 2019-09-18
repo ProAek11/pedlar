@@ -6,6 +6,8 @@ import logging
 from eventlet import GreenPool
 from eventlet.green import zmq
 
+from pedlar.utils import calc_profit
+
 # Designed to run locally only
 if __name__ != "__main__":
   raise RuntimeError("Can only run as stand-alone script.")
@@ -66,14 +68,12 @@ def handle_broker():
       # Ex. GBP account trading on GBPUSD since we don't have other
       # exchange rates streaming to us to handle conversion
       order = ORDERS.pop(order_id)
-      closep = BID if order.type == 2 else ASK
-      diff = closep - order.price if order.type == 2 else order.price - closep
-      profit = diff*ARGS.leverage*order.volume*1000*(1/closep)
-      resp = (order_id, closep, round(profit, 2), 0)
+      closep, profit = calc_profit(order, BID, ASK, leverage=ARGS.leverage)
+      resp = (order_id, closep, profit, 0)
       logger.info("CLOSING: %s", resp)
     elif action in (2, 3): # Buy - Sell
       oprice = ASK if action == 2 else BID
-      order = Order(id=nextid, price=oprice, volume=volume, type=action)
+      order = Order(id=nextid, price=oprice, volume=volume, type="buy" if action == 2 else "sell")
       ORDERS[nextid] = order
       logger.info("ORDER: %s", order)
       resp = (nextid, oprice, 0.0, 0)
